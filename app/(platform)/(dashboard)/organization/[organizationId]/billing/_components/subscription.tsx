@@ -24,14 +24,6 @@ export const SubscriptionButton = ({ isPro }: SubscriptionButtonProps) => {
 		},
 	});
 
-	const [isMounted, setIsMounted] = useState(false);
-
-	useEffect(() => {
-		setIsMounted(true);
-	}, []);
-
-	if (!isMounted) return null;
-
 	const onClick = () => {
 		if (isPro) {
 			execute({});

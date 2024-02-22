@@ -5,7 +5,6 @@ import { CreditCard } from "lucide-react";
 import { useOrganization } from "@clerk/nextjs";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useState } from "react";
 
 interface InfoProps {
 	isPro: boolean;
@@ -13,14 +12,6 @@ interface InfoProps {
 
 export const Info = ({ isPro }: InfoProps) => {
 	const { organization, isLoaded } = useOrganization();
-
-	const [isMounted, setIsMounted] = useState(false);
-
-	useEffect(() => {
-		setIsMounted(true);
-	}, []);
-
-	if (!isMounted) return null;
 
 	if (!isLoaded) {
 		return <Info.Skeleton />;
