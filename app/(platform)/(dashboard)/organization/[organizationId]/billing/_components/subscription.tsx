@@ -6,6 +6,7 @@ import { stripeRedirect } from "@/actions/stripe-redirect";
 import { Button } from "@/components/ui/button";
 import { useAction } from "@/hooks/use-action";
 import { useProModal } from "@/hooks/use-pro-modal";
+import { useEffect, useState } from "react";
 
 interface SubscriptionButtonProps {
 	isPro: boolean;
@@ -22,6 +23,14 @@ export const SubscriptionButton = ({ isPro }: SubscriptionButtonProps) => {
 			toast.error(error);
 		},
 	});
+
+	const [isMounted, setIsMounted] = useState(false);
+
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
+
+	if (!isMounted) return null;
 
 	const onClick = () => {
 		if (isPro) {

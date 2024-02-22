@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Info } from "../_components/info";
 
 import { SubscriptionButton } from "./_components/subscription";
+import { useEffect, useState } from "react";
 
 const BillingPage = async () => {
 	const isPro = await checkSubscription();
