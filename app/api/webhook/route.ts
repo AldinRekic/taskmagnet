@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
 			const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
 
-			await db.orgSubscription.create({
+			const createdOrgSubscription = await db.orgSubscription.create({
 				data: {
 					orgId: session?.metadata?.orgId,
 					stripeSubscriptionId: subscription.id,
@@ -36,6 +36,8 @@ export async function POST(req: Request) {
 					stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
 				},
 			});
+
+			console.log("createdOrgSubscription: ", createdOrgSubscription);
 		}
 
 		console.log("Event type:", event.type);
@@ -49,13 +51,25 @@ export async function POST(req: Request) {
 
 			console.log("Subscription object before update:", subscription);
 
-			await db.orgSubscription.update({
+			const existingSubscription = await db.orgSubscription.findUnique({
 				where: { stripeSubscriptionId: subscription.id },
-				data: {
-					stripePriceId: subscription.items.data[0].price.id,
-					stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-				},
 			});
+
+			console.log("existingSubscription: ", existingSubscription);
+
+			if (existingSubscription) {
+				// Update the existing record
+				await db.orgSubscription.update({
+					where: { stripeSubscriptionId: subscription.id },
+					data: {
+						stripePriceId: subscription.items.data[0].price.id,
+						stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+					},
+				});
+			} else {
+				// Handle the case where the record is not found
+				console.warn(`Subscription record not found for ID: ${subscription.id}`);
+			}
 		}
 
 		return new NextResponse(null, { status: 200 });
