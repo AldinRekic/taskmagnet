@@ -17,14 +17,14 @@ export async function POST(req: Request) {
 		return new NextResponse("Webhook error", { status: 400 });
 	}
 
-	const session = event.data.object as Stripe.Checkout.Session;
-
 	if (event.type === "checkout.session.completed") {
-		const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+		const session = event.data.object as Stripe.Checkout.Session;
 
 		if (!session?.metadata?.orgId) {
 			return new NextResponse("Org ID is required", { status: 400 });
 		}
+
+		const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
 
 		await db.orgSubscription.create({
 			data: {
@@ -38,12 +38,11 @@ export async function POST(req: Request) {
 	}
 
 	if (event.type === "invoice.payment_succeeded") {
-		const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-
+		const subscription = await stripe.subscriptions.retrieve(
+			event.data.object.subscription as string
+		);
 		await db.orgSubscription.update({
-			where: {
-				stripeSubscriptionId: subscription.id,
-			},
+			where: { stripeSubscriptionId: subscription.id },
 			data: {
 				stripePriceId: subscription.items.data[0].price.id,
 				stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
