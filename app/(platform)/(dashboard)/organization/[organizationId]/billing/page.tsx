@@ -6,15 +6,15 @@ import { Info } from "../_components/info";
 import { SubscriptionButton } from "./_components/subscription";
 
 const BillingPage = async () => {
-	const isPro = await checkSubscription();
+  const isPro = await checkSubscription();
 
-	return (
-		<div className="w-full">
-			<Info isPro={isPro} />
-			<Separator className="my-2" />
-			<SubscriptionButton isPro={isPro} />
-		</div>
-	);
+  return (
+    <div className="w-full">
+      <Info isPro={isPro} />
+      <Separator className="my-2" />
+      <SubscriptionButton isPro={isPro} />
+    </div>
+  );
 };
 
 export default BillingPage;

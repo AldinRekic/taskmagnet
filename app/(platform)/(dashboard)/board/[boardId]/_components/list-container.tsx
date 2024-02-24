@@ -2,7 +2,11 @@
 
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
+import {
+  DragDropContext,
+  Droppable,
+  OnDragEndResponder,
+} from "@hello-pangea/dnd";
 
 import { ListWithCards } from "@/types";
 import { useAction } from "@/hooks/use-action";
@@ -13,140 +17,157 @@ import { ListForm } from "./list-form";
 import { ListItem } from "./list-item";
 
 interface ListContainerProps {
-	data: ListWithCards[];
-	boardId: string;
+  data: ListWithCards[];
+  boardId: string;
 }
 
 function reorder<T>(list: T[], startIndex: number, endIndex: number) {
-	const result = Array.from(list);
-	const [removed] = result.splice(startIndex, 1);
-	result.splice(endIndex, 0, removed);
+  const result = Array.from(list);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
 
-	return result;
+  return result;
 }
 
 export const ListContainer = ({ data, boardId }: ListContainerProps) => {
-	const [orderdData, setOrderedData] = useState(data);
+  const [orderdData, setOrderedData] = useState(data);
 
-	const { execute: executeUpdateListOrder } = useAction(updateListOrder, {
-		onSuccess: () => {
-			toast.success("List reordered");
-		},
-		onError: (error) => {
-			toast.error(error);
-		},
-	});
+  const { execute: executeUpdateListOrder } = useAction(updateListOrder, {
+    onSuccess: () => {
+      toast.success("List reordered");
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
 
-	const { execute: executeUpdateCardOrder } = useAction(updateCardOrder, {
-		onSuccess: () => {
-			toast.success("Card reordered");
-		},
-		onError: (error) => {
-			toast.error(error);
-		},
-	});
+  const { execute: executeUpdateCardOrder } = useAction(updateCardOrder, {
+    onSuccess: () => {
+      toast.success("Card reordered");
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
 
-	useEffect(() => {
-		setOrderedData(data);
-	}, [data]);
-	//TODO: "result" "any" type should be "OnDragEndResponder"
-	const onDragEnd = (result: any) => {
-		const { destination, source, type } = result;
+  useEffect(() => {
+    setOrderedData(data);
+  }, [data]);
 
-		if (!destination) {
-			return;
-		}
+  const onDragEnd = (result: any) => {
+    const { destination, source, type } = result;
 
-		// if dropped in the same position
-		if (destination.droppableId === source.droppableId && destination.index === source.index) {
-			return;
-		}
+    if (!destination) {
+      return;
+    }
 
-		// User moves a list
-		if (type === "list") {
-			const items = reorder(orderdData, source.index, destination.index).map((item, index) => ({
-				...item,
-				order: index,
-			}));
+    // if dropped in the same position
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
 
-			setOrderedData(items);
-			executeUpdateListOrder({ items, boardId });
-		}
+    // User moves a list
+    if (type === "list") {
+      const items = reorder(orderdData, source.index, destination.index).map(
+        (item, index) => ({
+          ...item,
+          order: index,
+        }),
+      );
 
-		// User moves a card
-		if (type === "card") {
-			let newOrderedData = [...orderdData];
+      setOrderedData(items);
+      executeUpdateListOrder({ items, boardId });
+    }
 
-			// Source and destination list
-			const sourceList = newOrderedData.find((list) => list.id === source.droppableId);
-			const destList = newOrderedData.find((list) => list.id === destination.droppableId);
+    // User moves a card
+    if (type === "card") {
+      let newOrderedData = [...orderdData];
 
-			if (!sourceList || !destList) {
-				return;
-			}
+      // Source and destination list
+      const sourceList = newOrderedData.find(
+        (list) => list.id === source.droppableId,
+      );
+      const destList = newOrderedData.find(
+        (list) => list.id === destination.droppableId,
+      );
 
-			// Check if cards exists on the sourceList
-			if (!sourceList.cards) {
-				sourceList.cards = [];
-			}
+      if (!sourceList || !destList) {
+        return;
+      }
 
-			// Check if cards exists on the destList
-			if (!destList.cards) {
-				destList.cards = [];
-			}
+      // Check if cards exists on the sourceList
+      if (!sourceList.cards) {
+        sourceList.cards = [];
+      }
 
-			// Moving the card in the same list
-			if (source.droppableId === destination.droppableId) {
-				const reorderdCards = reorder(sourceList.cards, source.index, destination.index);
+      // Check if cards exists on the destList
+      if (!destList.cards) {
+        destList.cards = [];
+      }
 
-				reorderdCards.forEach((card, idx) => {
-					card.order = idx;
-				});
+      // Moving the card in the same list
+      if (source.droppableId === destination.droppableId) {
+        const reorderdCards = reorder(
+          sourceList.cards,
+          source.index,
+          destination.index,
+        );
 
-				sourceList.cards = reorderdCards;
+        reorderdCards.forEach((card, idx) => {
+          card.order = idx;
+        });
 
-				setOrderedData(newOrderedData);
-				executeUpdateCardOrder({ boardId: boardId, items: reorderdCards });
-				// User moves the card to another list
-			} else {
-				// Remove card from the source list
-				const [movedCard] = sourceList.cards.splice(source.index, 1);
+        sourceList.cards = reorderdCards;
 
-				// Assign the new listId to the moved card
-				movedCard.listId = destination.droppableId;
+        setOrderedData(newOrderedData);
+        executeUpdateCardOrder({ boardId: boardId, items: reorderdCards });
+        // User moves the card to another list
+      } else {
+        // Remove card from the source list
+        const [movedCard] = sourceList.cards.splice(source.index, 1);
 
-				// Add card to the destination list
-				destList.cards.splice(destination.index, 0, movedCard);
+        // Assign the new listId to the moved card
+        movedCard.listId = destination.droppableId;
 
-				sourceList.cards.forEach((card, idx) => {
-					card.order = idx;
-				});
+        // Add card to the destination list
+        destList.cards.splice(destination.index, 0, movedCard);
 
-				// Update the order for each card in the destination list
-				destList.cards.forEach((card, idx) => {
-					card.order = idx;
-				});
+        sourceList.cards.forEach((card, idx) => {
+          card.order = idx;
+        });
 
-				setOrderedData(newOrderedData);
-				executeUpdateCardOrder({ boardId: boardId, items: destList.cards });
-			}
-		}
-	};
+        // Update the order for each card in the destination list
+        destList.cards.forEach((card, idx) => {
+          card.order = idx;
+        });
 
-	return (
-		<DragDropContext onDragEnd={onDragEnd}>
-			<Droppable droppableId="lists" type="list" direction="horizontal">
-				{(provided) => (
-					<ol {...provided.droppableProps} ref={provided.innerRef} className="flex gap-x-3 h-full">
-						{orderdData.map((list, index) => {
-							return <ListItem key={list.id} index={index} data={list} />;
-						})}
-						{provided.placeholder}
-						<ListForm />
-						<div className="flex-shrink-0 w-1" />
-					</ol>
-				)}
-			</Droppable>
-		</DragDropContext>
-	);
+        setOrderedData(newOrderedData);
+        executeUpdateCardOrder({ boardId: boardId, items: destList.cards });
+      }
+    }
+  };
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="lists" type="list" direction="horizontal">
+        {(provided) => (
+          <ol
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            className="flex h-full gap-x-3"
+          >
+            {orderdData.map((list, index) => {
+              return <ListItem key={list.id} index={index} data={list} />;
+            })}
+            {provided.placeholder}
+            <ListForm />
+            <div className="w-1 flex-shrink-0" />
+          </ol>
+        )}
+      </Droppable>
+    </DragDropContext>
+  );
 };

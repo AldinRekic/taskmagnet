@@ -4,17 +4,19 @@ import React, { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
-	const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(() => new QueryClient());
 
-	const [isMounted, setIsMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-	useEffect(() => {
-		setIsMounted(true);
-	}, []);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-	if (!isMounted) {
-		return null;
-	}
+  if (!isMounted) {
+    return null;
+  }
 
-	return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
 };

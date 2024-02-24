@@ -6,17 +6,15 @@ import { useOrganizationList } from "@clerk/nextjs";
 
 export const OrgControl = () => {
   const params = useParams();
-  const {setActive} = useOrganizationList();
+  const { setActive } = useOrganizationList();
 
-  useEffect(()=> {
-    if(!setActive)return;
+  useEffect(() => {
+    if (!setActive) return;
 
     setActive({
-      organization: params.organizationId as string
+      organization: params.organizationId as string,
     });
-
-
-  }, [setActive, params.organizationId])
+  }, [setActive, params.organizationId]);
 
   return null;
-}
+};
